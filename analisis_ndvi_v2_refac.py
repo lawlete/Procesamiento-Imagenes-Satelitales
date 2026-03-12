@@ -258,8 +258,32 @@ def procesar_waypoint(latitud, longitud, fecha_inicio, fecha_fin):
     return stats
 
 # ==========================================
-# PROGRAMA PRINCIPAL
+# PROGRAMA PRINCIPAL Y MENÚ
 # ==========================================
+def procesar_desde_archivo(ruta_archivo):
+    """Procesa un lote de puntos y fechas a partir de un archivo CSV"""
+    try:
+        df_puntos = pd.read_csv(ruta_archivo)
+        requeridos = {'latitud', 'longitud', 'fecha_inicio', 'fecha_fin'}
+        
+        # Validar formato del archivo
+        if not requeridos.issubset(set(df_puntos.columns)):
+            print(f"❌ Error: El archivo debe contener exactamente estas columnas:")
+            print("   latitud, longitud, fecha_inicio, fecha_fin")
+            return
+            
+        print(f"✅ Archivo cargado. Se encontraron {len(df_puntos)} puntos a procesar.")
+        
+        # Iterar cada punto
+        for index, row in df_puntos.iterrows():
+            print(f"\n[{index + 1}/{len(df_puntos)}] Procesando lote...")
+            procesar_waypoint(row['latitud'], row['longitud'], str(row['fecha_inicio']), str(row['fecha_fin']))
+        
+        print("\n✅ PROCESAMIENTO POR LOTE FINALIZADO.")
+        
+    except Exception as e:
+        print(f"❌ Error al intentar leer el archivo: {e}")
+
 def main():
     print("="*70)
     print("ANÁLISIS NDVI - MÚLTIPLES WAYPOINTS (REFACTORIZADO CON PANDAS)")
@@ -270,20 +294,37 @@ def main():
     
     print(f"📁 Output de archivos será en: {CARPETA_SALIDA}")
     
-    continuar = True
-    while continuar:
-        print("\n" + "-"*50 + "\nNUEVO ANÁLISIS\n" + "-"*50)
+    print("\n¿Cómo desea ingresar los datos de análisis?")
+    print(" 1 - Carga Manual (Interactivo por consola)")
+    print(" 2 - Desde Archivo CSV (Procesamiento por lote)")
+    modo = input("\nSeleccione opción [1/2]: ").strip()
+    
+    if modo == '2':
+        print("\n--- MODO LOTE DESDE ARCHIVO ---")
+        print("Asegúrese de proveer un archivo delimitado por comas con este formato en la cabecera:")
+        print("latitud,longitud,fecha_inicio,fecha_fin")
         
-        # Recolección de inputs
-        lat = ingresar_float_con_default("Latitud", DEFAULT_LAT)
-        lon = ingresar_float_con_default("Longitud", DEFAULT_LON)
-        ini = ingresar_fecha_con_default("Fecha inicio", DEFAULT_INI)
-        fin = ingresar_fecha_con_default("Fecha fin", DEFAULT_FIN)
+        ruta_archivo = ingresar_con_default("\nIngrese la ruta y nombre del archivo", "waypoints.csv")
         
-        procesar_waypoint(lat, lon, ini, fin)
-        
-        resp = input("\n¿Analizar otro waypoint? (s/n): ").strip().lower()
-        continuar = resp in ['s', 'si', 'sí', 'y', 'yes']
+        if os.path.exists(ruta_archivo):
+            procesar_desde_archivo(ruta_archivo)
+        else:
+            print(f"❌ No se pudo encontrar el archivo provisto: {ruta_archivo}")
+    else:
+        continuar = True
+        while continuar:
+            print("\n" + "-"*50 + "\nNUEVO ANÁLISIS (MANUAL)\n" + "-"*50)
+            
+            # Recolección de inputs
+            lat = ingresar_float_con_default("Latitud", DEFAULT_LAT)
+            lon = ingresar_float_con_default("Longitud", DEFAULT_LON)
+            ini = ingresar_fecha_con_default("Fecha inicio", DEFAULT_INI)
+            fin = ingresar_fecha_con_default("Fecha fin", DEFAULT_FIN)
+            
+            procesar_waypoint(lat, lon, ini, fin)
+            
+            resp = input("\n¿Analizar otro waypoint? (s/n): ").strip().lower()
+            continuar = resp in ['s', 'si', 'sí', 'y', 'yes']
     
     print("\n" + "="*70 + "\nPROGRAMA FINALIZADO\n" + "="*70)
 

@@ -55,9 +55,19 @@ fecha_fin_default = 2025-11-11
    ```bash
    python analisis_ndvi_v2_refac.py
    ```
-2. La consola te pedirá ingresar los datos para el análisis. Puedes presionar `Enter` para usar los valores por defecto configurados en tu `config.ini` o tipear tus propios valores.
-3. Los resultados se guardarán en la ruta configurada en el archivo `.ini`.
-4. El programa te preguntará si deseas analizar otro punto al finalizar cada ejecución.
+2. La consola te preguntará qué tipo de método de ingreso prefieres:
+    * **Opción 1 (Manual):** Te pedirá ingresar por consola la iteración de un punto por vez (apretando `Enter` usa los valores por defecto configurados en tu `config.ini`).
+    * **Opción 2 (Por Archivo Lote):** Te pedirá la ruta de un archivo `.csv` con tus configuraciones y procesará uno por uno automáticamente. 
+    
+    El **formato del archivo CSV** necesario para la opción 2 debe obligatoriamente contener la siguiente cabecera exacta:
+    ```csv
+    latitud,longitud,fecha_inicio,fecha_fin
+    -34.65248,-61.36234,2025-04-02,2025-11-11
+    -34.65348,-61.36334,2025-01-01,2025-06-30
+    ```
+    *(Ver el ejemplo incluido `waypoints.csv`)*.
+
+3. Los resultados (Archivos de Serie, Resumen y un Reporte Agronómico descriptivo general) se guardarán en la ruta configurada en el archivo `.ini`.
 
 ## Notas
 * Si es la primera vez que ejecutas procesos de Earth Engine en tu entorno o tu token expira, el script intentará abrir automáticamente una ventana de navegador para solicitar tu autenticación.
