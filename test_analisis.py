@@ -64,7 +64,8 @@ def test_procesar_waypoint_flujo_completo(mock_gee, tmp_path):
     
     # 4. Verificaciones de I/O (Exportación a disco)
     archivos_generados = os.listdir(tmp_path)
-    assert len(archivos_generados) == 2  # Debe haber dos CVS
+    assert len(archivos_generados) == 3  # Debe haber dos CSVs y un TXT
     
     assert any("serie.csv" in a for a in archivos_generados)
     assert any("resumen.csv" in a for a in archivos_generados)
+    assert any("reporte.txt" in a for a in archivos_generados)
