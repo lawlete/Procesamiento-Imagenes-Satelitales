@@ -18,8 +18,15 @@ Este script en Python utiliza Google Earth Engine (GEE) para extraer y analizar 
 *   Credenciales y cuenta activa en Google Earth Engine.
 *   Librerías de Python requeridas en esta versión:
 ```bash
-pip install earthengine-api pandas numpy
+pip install earthengine-api pandas numpy pytest pytest-mock
 ```
+
+## Pruebas y Rendimiento
+
+Este repositorio incluye herramientas para asegurar que el código funciona correctamente y está optimizado:
+
+*   **Benchmark** `python benchmark_ndvi.py`: Muestra un desglose del tiempo que tarda el script en importar archivos, autenticarse y procesar. Verás que la autenticación de GEE de Google demora alrededor de 1-3 segundos, pero el procesamiento posterior es casi instantáneo.
+*   **Tests** `pytest test_analisis.py`: Corre las pruebas unitarias y funcionales, simulando respuestas de la API de Google en entornos sin internet.
 
 ## Configuración y Setup (`config.ini`)
 
