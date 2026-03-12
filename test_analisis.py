@@ -69,3 +69,35 @@ def test_procesar_waypoint_flujo_completo(mock_gee, tmp_path):
     assert any("serie.csv" in a for a in archivos_generados)
     assert any("resumen.csv" in a for a in archivos_generados)
     assert any("reporte.txt" in a for a in archivos_generados)
+
+
+@patch('analisis_ndvi_v2_refac.procesar_waypoint')
+def test_procesar_desde_archivo_valido(mock_procesar, tmp_path):
+    """Prueba la lectura por lote desde un archivo CSV con formato correcto"""
+    # Crear archivo CSV temporal simulado
+    csv_content = "latitud,longitud,fecha_inicio,fecha_fin\n-34.0,-61.0,2025-01-01,2025-12-31\n-35.0,-62.0,2025-02-01,2025-11-30"
+    archivo_csv = tmp_path / "waypoints_test.csv"
+    archivo_csv.write_text(csv_content, encoding='utf-8')
+
+    # Llamar a la función (Carga en lote)
+    script.procesar_desde_archivo(str(archivo_csv))
+
+    # Verificar que se llamó a la función core 2 veces
+    assert mock_procesar.call_count == 2
+    
+    # Validar que los datos extraídos en la primera iteración coincidan exactamente
+    args_llamada_1, _ = mock_procesar.call_args_list[0]
+    assert args_llamada_1 == (-34.0, -61.0, "2025-01-01", "2025-12-31")
+
+@patch('analisis_ndvi_v2_refac.procesar_waypoint')
+def test_procesar_desde_archivo_invalido(mock_procesar, tmp_path):
+    """Prueba que aborte y no procese si el CSV carece de columnas obligatorias"""
+    # CSV sin la columna 'fecha_fin'
+    csv_content = "latitud,longitud,fecha_inicio\n-34.0,-61.0,2025-01-01"
+    archivo_csv = tmp_path / "waypoints_error.csv"
+    archivo_csv.write_text(csv_content, encoding='utf-8')
+
+    script.procesar_desde_archivo(str(archivo_csv))
+
+    # Verificar que la función de procesamiento JAMÁS fue llamada
+    assert mock_procesar.call_count == 0
