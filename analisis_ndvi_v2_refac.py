@@ -8,12 +8,30 @@ import os
 import pandas as pd
 from datetime import datetime
 import logging
+import configparser
 
 # ==========================================
-# CONFIGURACIÓN GLOBAL
+# CONFIGURACIÓN GLOBAL (Lectura de config.ini)
 # ==========================================
-PROYECTO_GEE = 'imagenes-satelitales-490002'
-CARPETA_SALIDA = os.path.join(os.path.expanduser('~'), 'Desktop', 'imagenes_satelitales', 'analisis_ndvi_multiple')
+# Cargar configuración
+config = configparser.ConfigParser()
+config_file = os.path.join(os.path.dirname(__file__), 'config.ini')
+
+if not os.path.exists(config_file):
+    print(f"❌ Archivo {config_file} no encontrado. Por favor crearlo.")
+    exit(1)
+
+config.read(config_file, encoding='utf-8')
+
+# Asignar variables globales desde archivo
+PROYECTO_GEE = config.get('EarthEngine', 'proyecto_id', fallback='imagenes-satelitales-490002')
+_carpeta_raw = config.get('Rutas', 'carpeta_salida', fallback='~/Desktop/imagenes_satelitales/analisis_ndvi_multiple')
+CARPETA_SALIDA = os.path.expanduser(_carpeta_raw)
+
+DEFAULT_LAT = config.getfloat('Defaults', 'latitud_default', fallback=-34.652483699)
+DEFAULT_LON = config.getfloat('Defaults', 'longitud_default', fallback=-61.362346398)
+DEFAULT_INI = config.get('Defaults', 'fecha_inicio_default', fallback='2025-04-02')
+DEFAULT_FIN = config.get('Defaults', 'fecha_fin_default', fallback='2025-11-11')
 
 logging.getLogger('googleapiclient').setLevel(logging.WARNING)
 logging.getLogger('urllib3').setLevel(logging.WARNING)
@@ -200,10 +218,10 @@ def main():
         print("\n" + "-"*50 + "\nNUEVO ANÁLISIS\n" + "-"*50)
         
         # Recolección de inputs
-        lat = ingresar_float_con_default("Latitud", -34.652483699)
-        lon = ingresar_float_con_default("Longitud", -61.362346398)
-        ini = ingresar_fecha_con_default("Fecha inicio", '2025-04-02')
-        fin = ingresar_fecha_con_default("Fecha fin", '2025-11-11')
+        lat = ingresar_float_con_default("Latitud", DEFAULT_LAT)
+        lon = ingresar_float_con_default("Longitud", DEFAULT_LON)
+        ini = ingresar_fecha_con_default("Fecha inicio", DEFAULT_INI)
+        fin = ingresar_fecha_con_default("Fecha fin", DEFAULT_FIN)
         
         procesar_waypoint(lat, lon, ini, fin)
         
