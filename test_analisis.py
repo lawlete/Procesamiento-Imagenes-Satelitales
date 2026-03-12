@@ -3,7 +3,7 @@ from unittest.mock import patch
 import os
 
 # Importamos el módulo a probar
-import analisis_ndvi_v2_refac as g script
+import analisis_ndvi_v2_refac as script
 
 # ==========================================
 # PRUEBAS UNITARIAS
