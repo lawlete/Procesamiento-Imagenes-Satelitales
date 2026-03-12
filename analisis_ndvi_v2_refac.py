@@ -146,6 +146,63 @@ def obtener_serie_ndvi_gee(latitud, longitud, fecha_inicio, fecha_fin):
 # ==========================================
 # MANEJO DE DATOS Y ARCHIVOS (PANDAS)
 # ==========================================
+def generar_reporte_agronomico(df, stats, ruta_txt):
+    """
+    Genera un informe descriptivo y estadístico narrativo de las fases de la pastura
+    basado en el comportamiento temporal del NDVI.
+    """
+    # Cálculos adicionales para el reporte
+    mean = stats['NDVI_promedio']
+    std = df['NDVI'].std()
+    cv = (std / mean) * 100 if mean > 0 else 0
+    
+    stats['NDVI_std'] = round(std, 4)
+    stats['NDVI_cv'] = round(cv, 2)
+    
+    with open(ruta_txt, 'w', encoding='utf-8') as f:
+        f.write("RESUMEN ESTADÍSTICO DESCRIPTIVO Y EVOLUCIÓN TEMPORAL\n")
+        f.write("="*60 + "\n\n")
+        
+        f.write("1. Comportamiento Global del Índice\n")
+        f.write("-" * 40 + "\n")
+        f.write(f"El comportamiento global del índice durante el periodo analizado muestra los siguientes valores clave:\n")
+        f.write(f"• Valor Promedio: El NDVI medio fue de {stats['NDVI_promedio']:.4f}, lo que indica el vigor general de la cobertura vegetal.\n")
+        f.write(f"• Valores Extremos: El mínimo ({stats['NDVI_minimo']:.4f}) se registró el {stats['fecha_minimo']}, "
+                f"probablemente reflejando el momento de menor cobertura, estado de suelo desnudo o post-siembra. "
+                f"El máximo ({stats['NDVI_maximo']:.4f}) se alcanzó el {stats['fecha_maximo']}, señalando el pico máximo de biomasa.\n")
+        f.write(f"• Variabilidad: El coeficiente de variación temporal es del {stats['NDVI_cv']:.2f}%, "
+                f"un indicador de cómo fluctuó la cobertura a lo largo del ciclo.\n\n")
+
+        f.write("2. Análisis de la Evolución Temporal por Fases o Estaciones\n")
+        f.write("-" * 40 + "\n")
+        f.write("La serie temporal permite observar distintas fases en el desarrollo de la pastura:\n")
+
+        # Separar por meses las etapas de crecimiento (Hemisferio Sur)
+        # Otoño (Mar, Abr, May) - Invierno (Jun, Jul, Ago) - Primavera (Sep, Oct, Nov) - Verano (Dic, Ene, Feb)
+        etapas = {
+            'Otoño (Fase Inicial / Establecimiento)': [3, 4, 5],
+            'Invierno (Crecimiento Lento / Sostenido)': [6, 7, 8],
+            'Primavera (Explosión Primaveral / Alta Actividad)': [9, 10, 11],
+            'Verano (Ciclo Tardío / Estrés)': [12, 1, 2]
+        }
+        
+        for nombre_etapa, meses in etapas.items():
+            df_etapa = df[df['fecha'].dt.month.isin(meses)]
+            if not df_etapa.empty:
+                val_min = df_etapa['NDVI'].min()
+                val_max = df_etapa['NDVI'].max()
+                val_mean = df_etapa['NDVI'].mean()
+                f.write(f"• Fase {nombre_etapa}: Se registraron fluctuaciones entre {val_min:.4f} y {val_max:.4f}. "
+                        f"En esta etapa, el promedio sostenido fue de {val_mean:.4f}.\n")
+
+        f.write("\n" + "="*60 + "\n")
+    
+    print("\n📝 REPORTE GENERADO AUTOMÁTICAMENTE:")
+    # Imprimimos un extracto al usuario en consola
+    with open(ruta_txt, 'r', encoding='utf-8') as f:
+        print(f.read())
+
+
 def procesar_waypoint(latitud, longitud, fecha_inicio, fecha_fin):
     """Controlador que une GEE, análisis estadístico y exportación"""
     print(f"\n{'='*70}\n📍 ANALIZANDO: {latitud}, {longitud}\n📅 PERÍODO: {fecha_inicio} a {fecha_fin}\n{'='*70}")
@@ -189,14 +246,14 @@ def procesar_waypoint(latitud, longitud, fecha_inicio, fecha_fin):
     csv_serie = os.path.join(CARPETA_SALIDA, f'{nombre_base}_serie.csv')
     df.to_csv(csv_serie, index=False, date_format='%Y-%m-%d')
     
+    # Generar el reporte automatizado (Esto también nos nutrirá `stats` con CV y STD)
+    txt_reporte = os.path.join(CARPETA_SALIDA, f'{nombre_base}_reporte.txt')
+    generar_reporte_agronomico(df, stats, txt_reporte)
+
     csv_resumen = os.path.join(CARPETA_SALIDA, f'{nombre_base}_resumen.csv')
     pd.DataFrame([stats]).to_csv(csv_resumen, index=False)
     
-    print(f"\n📈 RESULTADOS:")
-    print(f"   PROMEDIO: {stats['NDVI_promedio']}")
-    print(f"   MÁXIMO: {stats['NDVI_maximo']} ({stats['fecha_maximo']})")
-    print(f"   MÍNIMO: {stats['NDVI_minimo']} ({stats['fecha_minimo']})")
-    print(f"📁 Archivos guardados exitosamente!")
+    print(f"📁 Archivos guardados exitosamente en: {CARPETA_SALIDA}")
     
     return stats
 
