@@ -18,7 +18,7 @@ Este script en Python utiliza Google Earth Engine (GEE) para extraer y analizar 
 *   Credenciales y cuenta activa en Google Earth Engine.
 *   Librerías de Python requeridas en esta versión:
 ```bash
-pip install earthengine-api pandas
+pip install earthengine-api pandas numpy
 ```
 
 ## Configuración y Setup (`config.ini`)
